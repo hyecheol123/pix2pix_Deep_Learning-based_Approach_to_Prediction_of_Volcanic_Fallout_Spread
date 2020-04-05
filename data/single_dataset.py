@@ -5,8 +5,6 @@ from PIL import Image
 
 class SingleDataset(BaseDataset):
     """This dataset class can load a set of images specified by the path --dataroot /path/to/data.
-
-    It can be used for generating CycleGAN results only for one side with the model option '-model test'.
     """
 
     def __init__(self, opt):
