@@ -61,8 +61,7 @@ if __name__ == '__main__':
             model.compute_visuals()           # get visuals
             visuals = model.get_current_visuals()  # get image results
             img_path = model.get_image_paths()     # get image paths (To parse current image name)
-            if (i % 10 == 0) or (i == dataset_size - 1):  # printing message
-                print('processing (%04d)-th image... %s' % (i, img_path))
+            print('processing (%04d)-th image... %s' % (epoch_iter, img_path)) # printing message
             save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
 
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
