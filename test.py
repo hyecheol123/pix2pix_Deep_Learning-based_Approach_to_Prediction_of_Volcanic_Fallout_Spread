@@ -22,6 +22,7 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import save_images
 from util import html
+import statistics
 
 
 if __name__ == '__main__':
@@ -45,14 +46,25 @@ if __name__ == '__main__':
     # For [pix2pix]: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
     if opt.eval:
         model.eval()
+    
+    total_loss = []
+
     for i, data in enumerate(dataset):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
         model.set_input(data)  # unpack data from data loader
         model.test()           # run inference
+        
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
+        losses = model.get_current_losses()
+        for k, v in losses.items(): # we know there only exist G_L1
+            print('%s: %.4f' % (k, v)) # print current loss
+            total_loss.append(v)
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     webpage.save()  # save the HTML
+    print("Loss Summary")
+    print("Average: %.4f" % statistics.mean(total_loss))
+    print("Standard Deviation: %.4f" % statistics.stdev(total_loss))

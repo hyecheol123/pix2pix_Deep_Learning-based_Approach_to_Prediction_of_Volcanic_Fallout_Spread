@@ -63,6 +63,7 @@ if __name__ == '__main__':
             img_path = model.get_image_paths()     # get image paths (To parse current image name)
             if (epoch_iter % 10 == 0): 
                 print('processing (%04d)-th image... %s' % ((i+1)*opt.batch_size, img_path)) # printing message
+            # TODO Fix code: Batch size > 1 causes not all images to be saved
             save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
 
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
