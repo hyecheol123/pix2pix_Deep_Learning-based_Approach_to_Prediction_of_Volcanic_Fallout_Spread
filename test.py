@@ -23,6 +23,7 @@ from models import create_model
 from util.visualizer import save_images
 from util import html
 import statistics
+from collections import OrderedDict
 
 
 if __name__ == '__main__':
@@ -47,7 +48,10 @@ if __name__ == '__main__':
     if opt.eval:
         model.eval()
     
-    total_loss = []
+    # Initialize total_loss
+    total_loss = OrderedDict()
+    for name in model.loss_names:
+        total_loss[name] = []
 
     for i, data in enumerate(dataset):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
@@ -61,10 +65,15 @@ if __name__ == '__main__':
             print('processing (%04d)-th image... %s' % (i, img_path))
         losses = model.get_current_losses()
         for k, v in losses.items(): # we know there only exist G_L1
-            print('%s: %.4f' % (k, v)) # print current loss
-            total_loss.append(v)
+            print('%s: %.4f' % (k, v), end = "\t") # print current loss
+            total_loss[k].append(v)
+        print("\n", end = "")
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     webpage.save()  # save the HTML
-    print("Loss Summary")
-    print("Average: %.4f" % statistics.mean(total_loss))
-    print("Standard Deviation: %.4f" % statistics.stdev(total_loss))
+
+    print("\n\nLoss Summary") # Print Loss Summary
+    print("Total Test Cases: %d\n" % len(total_loss[model.loss_names[0]]))
+    for loss_name, value in total_loss.items():
+        print(loss_name)
+        print("Average: %.4f" % statistics.mean(value))
+        print("Standard Deviation: %.4f\n" % statistics.stdev(value))

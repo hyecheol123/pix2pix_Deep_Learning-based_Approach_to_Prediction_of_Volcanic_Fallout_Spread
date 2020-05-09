@@ -31,8 +31,7 @@ class Pix2PixModel(BaseModel):
         # changing the default values to match the pix2pix paper (https://phillipi.github.io/pix2pix/)
         parser.set_defaults(norm='batch', netG='unet_256', dataset_mode='aligned')
         parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
-        if is_train:
-            parser.set_defaults(pool_size=0, gan_mode='vanilla')
+        parser.set_defaults(pool_size=0, gan_mode='vanilla')
 
         return parser
 
@@ -44,23 +43,20 @@ class Pix2PixModel(BaseModel):
         """
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
-        if self.isTrain:
-            self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
-        else:
-            self.loss_names = ['G_L1']
+        self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
 
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         self.visual_names = ['real_A', 'fake_B', 'real_B']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
             self.model_names = ['G', 'D']
-        else:  # during test time, only load G
+        elif not(self.opt.test_loss):  # during test time, only load G
             self.model_names = ['G']
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                       not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
 
-        if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
+        if self.isTrain or self.opt.test_loss:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
 
@@ -76,6 +72,7 @@ class Pix2PixModel(BaseModel):
         else:
             if self.opt.test_loss: # during testing time, only calculate L1 loss for testing loss (when specified)
                 self.criterionL1 = torch.nn.L1Loss()
+                self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
 
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
@@ -98,6 +95,15 @@ class Pix2PixModel(BaseModel):
         if not(self.isTrain):
             if self.opt.test_loss == 1:
                 self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+                # Calculate Discriminator Loss & GAN Loss
+                fake_AB = torch.cat((self.real_A, self.fake_B), 1)
+                pred_fake = self.netD(fake_AB.detach())
+                self.loss_D_fake = self.criterionGAN(pred_fake, False)
+                real_AB = torch.cat((self.real_A, self.real_B), 1)
+                pred_real = self.netD(real_AB)
+                self.loss_D_real = self.criterionGAN(pred_real, True)
+                pred_fake = self.netD(fake_AB)
+                self.loss_G_GAN = self.criterionGAN(pred_fake, True)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
