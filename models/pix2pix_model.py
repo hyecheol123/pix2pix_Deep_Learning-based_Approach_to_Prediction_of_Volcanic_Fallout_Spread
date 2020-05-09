@@ -73,8 +73,9 @@ class Pix2PixModel(BaseModel):
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
-        elif self.opt.test_loss: # during testing time, only calculate L1 loss for testing loss (when specified)
-            self.criterionL1 = torch.nn.L1Loss()
+        else:
+            if self.opt.test_loss: # during testing time, only calculate L1 loss for testing loss (when specified)
+                self.criterionL1 = torch.nn.L1Loss()
 
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
@@ -94,8 +95,9 @@ class Pix2PixModel(BaseModel):
         self.fake_B = self.netG(self.real_A)  # G(A)
 
         # Calculate L1 loss while testing if needed
-        if self.opt.test_loss == 1:
-            self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        if not(self.isTrain):
+            if self.opt.test_loss == 1:
+                self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
