@@ -63,7 +63,7 @@ if __name__ == '__main__':
         img_path = model.get_image_paths()     # get image paths
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
-        if model.test_loss == 1:
+        if model.opt.test_loss == 1:
             losses = model.get_current_losses()
             for k, v in losses.items(): # we know there only exist G_L1
                 print('%s: %.4f' % (k, v), end = "\t") # print current loss
