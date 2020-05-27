@@ -27,6 +27,7 @@ class HTML:
         if not os.path.exists(self.img_dir):
             os.makedirs(self.img_dir)
 
+        # Not able to append HTML file with dominate
         self.doc = dominate.document(title=title)
         if refresh > 0:
             with self.doc.head:
