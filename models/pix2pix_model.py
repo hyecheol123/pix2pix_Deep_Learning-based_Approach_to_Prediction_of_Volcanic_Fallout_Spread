@@ -67,6 +67,7 @@ class Pix2PixModel(BaseModel):
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            # TODO G/D Ratio
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
         else:

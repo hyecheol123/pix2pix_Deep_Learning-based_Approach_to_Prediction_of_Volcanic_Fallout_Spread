@@ -47,6 +47,7 @@ if __name__ == '__main__':
         webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
 
         # update learning rates in the beginning of every epoch.
+        # TODO G/D ratio: different learning rate
         if epoch != opt.epoch_count:
             model.update_learning_rate()
         else:
