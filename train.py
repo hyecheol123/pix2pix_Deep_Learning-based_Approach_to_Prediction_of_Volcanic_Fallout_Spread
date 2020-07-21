@@ -46,7 +46,12 @@ if __name__ == '__main__':
         print('creating web directory', web_dir) # Creating web directory
         webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
 
-        model.update_learning_rate()    # update learning rates in the beginning of every epoch.
+        # update learning rates in the beginning of every epoch.
+        if epoch != opt.epoch_count:
+            model.update_learning_rate()
+        else:
+            print('learning rate %.7f' % model.optimizers[0].param_groups[0]['lr'])
+
         for i, data in enumerate(dataset):  # inner loop within one epoch
             iter_start_time = time.time()  # timer for computation per iteration
             if total_iters % opt.print_freq == 0:
