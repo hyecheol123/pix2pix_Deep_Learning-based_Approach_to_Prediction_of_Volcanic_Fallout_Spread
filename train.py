@@ -46,6 +46,7 @@ if __name__ == '__main__':
         print('creating web directory', web_dir) # Creating web directory
         webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
 
+        model.update_learning_rate()    # update learning rates in the beginning of every epoch.
         for i, data in enumerate(dataset):  # inner loop within one epoch
             iter_start_time = time.time()  # timer for computation per iteration
             if total_iters % opt.print_freq == 0:
@@ -56,21 +57,10 @@ if __name__ == '__main__':
             model.set_input(data)         # unpack data from dataset and apply preprocessing
             model.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 
-            # For each epoch, save the training results (Images) as HTML file
-            # To see the training-time results
-            model.compute_visuals()           # get visuals
-            visuals = model.get_current_visuals()  # get image results
-            img_path = model.get_image_paths()     # get image paths (To parse current image name)
-            if (epoch_iter % 10 == 0): 
-                print('processing (%04d)-th image... %s' % ((i+1)*opt.batch_size, img_path)) # printing message
-            # TODO Fix code: Batch size > 1 causes not all images to be saved
-            save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
-
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
-                # model.compute_visuals()
-                # visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
-                visualizer.display_current_results(visuals, epoch, save_result)
+                model.compute_visuals()
+                visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
 
             if total_iters % opt.print_freq == 0:    # print training losses and save logging information to the disk
                 losses = model.get_current_losses()
@@ -94,4 +84,3 @@ if __name__ == '__main__':
             model.save_networks(epoch)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
-        model.update_learning_rate()                     # update learning rates at the end of every epoch.
